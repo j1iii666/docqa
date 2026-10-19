@@ -1,0 +1,7 @@
+server:
+  # 8080 留给本机 WSL 里的 Apache；8081 被未知提权进程占用；这里用 8082
+  port: 8082
+
+spring:
+  application:
+    name: docqa
