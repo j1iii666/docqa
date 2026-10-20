@@ -23,6 +23,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class AsyncConfig {
 
     public static final String DOC_PARSE_EXECUTOR = "docParseExecutor";
+    public static final String CHAT_EXECUTOR = "chatExecutor";
 
     @Bean(name = DOC_PARSE_EXECUTOR)
     public ThreadPoolTaskExecutor docParseExecutor() {
@@ -37,6 +38,27 @@ public class AsyncConfig {
         // 优雅停机：等服务关闭时把已排队的任务跑完
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+        return executor;
+    }
+
+    /**
+     * 问答专用线程池。
+     * <p>
+     * 每个问答请求会一直占着一个线程直到大模型吐完（几十秒到一两分钟），
+     * 所以绝不能和文档解析共用一个池，更不能用 Tomcat 请求线程。
+     */
+    @Bean(name = CHAT_EXECUTOR)
+    public ThreadPoolTaskExecutor chatExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(50);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("chat-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(20);
         executor.initialize();
         return executor;
     }

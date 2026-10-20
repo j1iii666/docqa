@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.j111.docqa.common.Result;
 import com.j111.docqa.dto.DocumentVO;
 import com.j111.docqa.dto.PageResult;
+import com.j111.docqa.ratelimit.RateLimit;
 import com.j111.docqa.security.CurrentUserHolder;
 import com.j111.docqa.service.DocumentService;
 
@@ -30,7 +31,10 @@ public class DocumentController {
     /**
      * 上传。multipart/form-data，字段名必须叫 file。
      * 注意：这个接口此刻返回的 status 一定是 PENDING，解析在后台线程里跑。
+     * <p>
+     * 上传会影响线程池和磁盘，按每分钟 20 次限流。
      */
+    @RateLimit(capacity = 20, perSeconds = 60)
     @PostMapping("/upload")
     public Result<DocumentVO> upload(@RequestParam("file") MultipartFile file) {
         return Result.ok(documentService.upload(CurrentUserHolder.require(), file));

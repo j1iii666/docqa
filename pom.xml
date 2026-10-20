@@ -48,6 +48,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Redis：缓存问答结果 + 令牌桶限流 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- 只取密码加密工具（BCrypt），不引入整套 Spring Security，避免默认拦截所有接口 -->
         <dependency>
             <groupId>org.springframework.security</groupId>

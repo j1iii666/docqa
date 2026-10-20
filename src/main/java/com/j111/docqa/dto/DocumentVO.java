@@ -15,6 +15,7 @@ public record DocumentVO(
         String contentType,
         DocumentStatus status,
         int textLength,
+        int chunkCount,
         String errorMessage,
         LocalDateTime createdAt) {
 
@@ -26,6 +27,7 @@ public record DocumentVO(
                 doc.getContentType(),
                 doc.getStatus(),
                 doc.getTextLength(),
+                doc.getChunkCount(),
                 doc.getErrorMessage(),
                 doc.getCreatedAt());
     }

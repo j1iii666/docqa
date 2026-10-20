@@ -60,6 +60,10 @@ public class Document {
     @Column(nullable = false)
     private int textLength = 0;
 
+    /** 切分出的文本块数量，0 表示还没切 */
+    @Column(name = "chunk_count", nullable = false)
+    private int chunkCount = 0;
+
     @Column(length = 500)
     private String errorMessage;
 
@@ -151,6 +155,14 @@ public class Document {
 
     public void setTextLength(int textLength) {
         this.textLength = textLength;
+    }
+
+    public int getChunkCount() {
+        return chunkCount;
+    }
+
+    public void setChunkCount(int chunkCount) {
+        this.chunkCount = chunkCount;
     }
 
     public String getErrorMessage() {

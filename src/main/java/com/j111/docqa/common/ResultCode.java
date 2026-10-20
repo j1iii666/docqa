@@ -12,6 +12,7 @@ public enum ResultCode {
     PARAM_INVALID(400, "参数不合法"),
     UNAUTHORIZED(401, "未登录或登录已过期"),
     NOT_FOUND(404, "资源不存在"),
+    RATE_LIMITED(429, "请求太频繁，请稍后再试"),
 
     INTERNAL_ERROR(500, "服务器内部错误"),
 

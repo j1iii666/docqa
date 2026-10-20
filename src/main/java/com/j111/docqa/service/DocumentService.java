@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.j111.docqa.cache.AnswerCacheService;
 import com.j111.docqa.common.BizException;
 import com.j111.docqa.common.ResultCode;
 import com.j111.docqa.dto.DocumentVO;
@@ -29,13 +30,16 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
     private final DocumentParseService documentParseService;
+    private final AnswerCacheService answerCacheService;
 
     public DocumentService(DocumentRepository documentRepository,
                            FileStorageService fileStorageService,
-                           DocumentParseService documentParseService) {
+                           DocumentParseService documentParseService,
+                           AnswerCacheService answerCacheService) {
         this.documentRepository = documentRepository;
         this.fileStorageService = fileStorageService;
         this.documentParseService = documentParseService;
+        this.answerCacheService = answerCacheService;
     }
 
     /**
@@ -59,6 +63,10 @@ public class DocumentService {
         doc = documentRepository.save(doc);
 
         documentParseService.parseAsync(doc.getId());
+
+        // 新增文档后，该用户之前基于旧文档集算出的问答缓存全部作废
+        // （否则会命中缓存，答案里缺少新上传的那份文档的内容）
+        answerCacheService.evictByUser(userId);
 
         return DocumentVO.from(doc);
     }

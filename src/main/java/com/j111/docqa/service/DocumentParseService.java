@@ -28,13 +28,16 @@ public class DocumentParseService {
     private final DocumentRepository documentRepository;
     private final TextExtractor textExtractor;
     private final FileStorageService fileStorageService;
+    private final ChunkService chunkService;
 
     public DocumentParseService(DocumentRepository documentRepository,
                                 TextExtractor textExtractor,
-                                FileStorageService fileStorageService) {
+                                FileStorageService fileStorageService,
+                                ChunkService chunkService) {
         this.documentRepository = documentRepository;
         this.textExtractor = textExtractor;
         this.fileStorageService = fileStorageService;
+        this.chunkService = chunkService;
     }
 
     /**
@@ -65,8 +68,19 @@ public class DocumentParseService {
             doc.setErrorMessage(null);
             documentRepository.save(doc);
 
-            log.info("解析完成: id={}, name={}, 字符数={}, 耗时={}ms",
-                    documentId, doc.getOriginalName(), text.length(), System.currentTimeMillis() - start);
+            // 切分 + 向量化。这一步失败不该把整个文档判定为解析失败：
+            // 文本已经抽出来了，只影响检索，所以单独兜住异常
+            try {
+                int chunkCount = chunkService.rebuild(documentId, doc.getUserId(), text);
+                doc.setChunkCount(chunkCount);
+                documentRepository.save(doc);
+            } catch (Exception e) {
+                log.error("切分/向量化失败: id={}", documentId, e);
+            }
+
+            log.info("解析完成: id={}, name={}, 字符数={}, 块数={}, 耗时={}ms",
+                    documentId, doc.getOriginalName(), text.length(), doc.getChunkCount(),
+                    System.currentTimeMillis() - start);
         } catch (Exception e) {
             // 单篇解析失败绝不能把线程池搞挂，这里兜住所有异常，把失败原因回写到表里
             log.error("解析失败: id={}", documentId, e);

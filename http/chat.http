@@ -1,0 +1,37 @@
+### docqa 问答（SSE 流式）
+### 先跑 doc.http 的第 0 条登录，token 会存进全局变量
+### IDEA 里点发送后，响应会一段一段地刷出来（event: sources / delta / done）
+
+@host = http://localhost:8082
+
+### 1. 问答：答案逐字流式返回
+POST {{host}}/api/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "query": "缓存穿透和缓存雪崩分别怎么解决？",
+  "topK": 3
+}
+
+### 2. 问答：问文档里没有的内容（预期模型回答"资料不足"）
+POST {{host}}/api/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "query": "这份文档里有没有讲 Kubernetes 的 HPA 配置？",
+  "topK": 3
+}
+
+### 3. 纯检索（不调大模型，不花钱，用来看召回了哪些片段）
+POST {{host}}/api/search
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "query": "线程池拒绝策略",
+  "topK": 3
+}

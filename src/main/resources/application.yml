@@ -29,6 +29,19 @@ spring:
       max-file-size: 20MB
       max-request-size: 25MB
 
+  # Redis：本地开发用 D:\Redis 起的实例（scripts\start-redis.bat）
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      timeout: 2s
+      # 连接池：不配的话每次都新建连接，高并发下会大量 TIME_WAIT
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
 # 自定义配置：JWT
 docqa:
   jwt:
@@ -43,3 +56,39 @@ docqa:
     dir: D:/docqa-data/uploads
     # 解析出来的纯文本放这里，后续切分/向量化都读它
     text-dir: D:/docqa-data/texts
+
+  # 文本切分参数
+  chunk:
+    # 单块最大字符数。500 字会把好几个主题塞进一块，检索精度明显变差；
+    # 300 左右对中文技术笔记比较合适，段落边界也不会被破坏
+    max-chars: 300
+    # 相邻块重叠字符数，防止答案正好卡在块边界被切碎
+    overlap: 50
+
+  # 向量化参数
+  embedding:
+    # 本地哈希向量的维度（换成真实模型后这个值由模型决定）
+    dimension: 512
+
+  # 大模型（DeepSeek，OpenAI 兼容接口）
+  llm:
+    base-url: https://api.deepseek.com
+    # 从环境变量读取，绝不写死在这里（否则会随 git 泄漏）
+    api-key: ${DEEPSEEK_API_KEY:}
+    model: deepseek-chat
+    # 问答要稳定，温度取小
+    temperature: 0.3
+    timeout-seconds: 120
+    # 最多拿几段资料拼进提示词
+    max-context-chunks: 5
+
+  # 问答结果缓存
+  cache:
+    # 缓存有效期（秒）。问答答案相对稳定，1 小时合适；
+    # 文档重新解析后应该主动失效，目前靠 TTL 兜底
+    answer-ttl-seconds: 3600
+    # 关掉缓存便于压测对比"有缓存/无缓存"的差异
+    enabled: true
+
+
+
