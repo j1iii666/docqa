@@ -1,0 +1,56 @@
+### docqa 接口调试文件
+### IDEA 里直接点左边的绿色三角运行；一个文件里 ### 分隔多个请求
+### 说明：register 里的用户名改掉再跑，重复注册会返回 code=1001
+
+@host = http://localhost:8082
+@username = j111test
+@password = test1234
+
+### 1. 健康检查（不返回统一格式，是骨架验证用的）
+GET {{host}}/api/health
+
+### 2. 注册
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### 3. 登录（成功后把 token 存进全局变量，给下面的请求用）
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {% client.global.set("token", response.body.data.token); %}
+
+### 4. 当前登录用户（带 token，预期 code=200）
+GET {{host}}/api/user/me
+Authorization: Bearer {{token}}
+
+### 5. 不带 token（预期 code=401）
+GET {{host}}/api/user/me
+
+### 6. 参数校验（用户名 2 位、密码 1 位，预期 code=400）
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "ab",
+  "password": "1"
+}
+
+### 7. 密码错误（预期 code=1002）
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "wrongpass"
+}

@@ -5,3 +5,41 @@ server:
 spring:
   application:
     name: docqa
+
+  datasource:
+    # 127.0.0.1 而不是 localhost：避免 JDBC 先解析到 IPv6 的 ::1 连不上
+    url: jdbc:mysql://127.0.0.1:3306/docqa?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: docqa
+    password: Docqa@2026
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # 学习阶段用 update 自动建表；正式项目应改成 validate 并用 Flyway 管理表结构
+      ddl-auto: update
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      # 单个文件上限 20MB，单次请求上限 25MB
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+# 自定义配置：JWT
+docqa:
+  jwt:
+    # 密钥必须 >= 32 字节，否则 HS256 会拒绝；正式环境应从环境变量读取，不要提交到仓库
+    secret: docqa-jwt-secret-key-please-change-in-production-2026
+    issuer: docqa
+    # token 有效期（秒），这里 7 天
+    expire-seconds: 604800
+
+  upload:
+    # 原始文件落盘目录（D 盘，不占系统盘）
+    dir: D:/docqa-data/uploads
+    # 解析出来的纯文本放这里，后续切分/向量化都读它
+    text-dir: D:/docqa-data/texts

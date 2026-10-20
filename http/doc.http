@@ -1,0 +1,67 @@
+### docqa 文档模块调试
+### 先跑第 0 条「登录」：它会把 token 写进全局变量，下面的请求才能用
+### 上传用的样例文件由 scripts/make_test_files.py 生成到 target/testfiles/
+
+@host = http://localhost:8082
+@username = j111test
+@password = test1234
+
+### 0. 先登录（token 为空就报 unsubstituted variable 'token'，跑这条即可）
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {% client.global.set("token", response.body.data.token); %}
+
+### 1. 上传 Word（注意请求体是 multipart，IDEA 里靠 < 文件路径 传文件）
+POST {{host}}/api/doc/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample.docx"
+Content-Type: application/octet-stream
+
+< D:/JavaProjects/docqa/target/testfiles/sample.docx
+--WebAppBoundary--
+
+### 2. 上传 PDF
+POST {{host}}/api/doc/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/octet-stream
+
+< D:/JavaProjects/docqa/target/testfiles/sample.pdf
+--WebAppBoundary--
+
+### 3. 文档列表（page 从 1 开始，size 最大 50）
+### 上传后立刻查是 PENDING/PARSING，等一两秒再查就变 SUCCESS
+GET {{host}}/api/doc/list?page=1&size=10
+Authorization: Bearer {{token}}
+
+### 4. 文档详情
+GET {{host}}/api/doc/1
+Authorization: Bearer {{token}}
+
+### 5. 预览解析出的纯文本（把 id 改成你自己的文档 id）
+GET {{host}}/api/doc/1/text?maxChars=1000
+Authorization: Bearer {{token}}
+
+### 6. 不带 token 上传（预期 code=401）
+POST {{host}}/api/doc/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample.txt"
+Content-Type: text/plain
+
+< D:/JavaProjects/docqa/target/testfiles/sample.txt
+--WebAppBoundary--
